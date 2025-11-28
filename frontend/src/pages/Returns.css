@@ -1,0 +1,14 @@
+.returns-page .container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.returns-content h2 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.returns-content ul {
+    list-style-position: inside;
+    padding-left: 1rem;
+}
