@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
 import './ProductList.css'
-import apiService from '../services/api'
+import { products as localProducts } from '../data/products'
+
 
 const ProductList = () => {
   const { categoryId } = useParams()
@@ -16,34 +17,60 @@ const ProductList = () => {
     sortBy: 'name'
   })
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true)
-      try {
-        const params = { ...filters }
-        if (categoryId) {
-          params.category_id = categoryId
-        }
-        if (searchTerm) {
-          params.search = searchTerm
-        }
-        const response = await apiService.getProducts(params)
-        setProducts(response.data)
-      } catch (error) {
-        console.error('Error fetching products:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
+useEffect(() => {
+  setLoading(true)
 
-    fetchProducts()
-  }, [categoryId, searchTerm, filters])
+  // 1. Empezamos con todos los productos locales
+  let filtered = [...localProducts]
+
+  // 2. Filtrar por categoría
+  if (categoryId) {
+    filtered = filtered.filter(p => p.category === categoryId)
+  }
+
+  // 3. Buscar por texto
+  if (searchTerm) {
+    filtered = filtered.filter(p =>
+      p.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }
+
+  // 4. Filtrar por rango de precio
+  if (filters.priceRange) {
+    if (filters.priceRange === "under-100k") {
+      filtered = filtered.filter(p => p.price < 100000)
+    }
+    if (filters.priceRange === "100k-200k") {
+      filtered = filtered.filter(p => p.price >= 100000 && p.price <= 200000)
+    }
+    if (filters.priceRange === "200k-300k") {
+      filtered = filtered.filter(p => p.price >= 200000 && p.price <= 300000)
+    }
+    if (filters.priceRange === "over-300k") {
+      filtered = filtered.filter(p => p.price > 300000)
+    }
+  }
+
+  // 5. Ordenar
+  if (filters.sortBy === "name") {
+    filtered.sort((a, b) => a.name.localeCompare(b.name))
+  }
+  if (filters.sortBy === "price-low") {
+    filtered.sort((a, b) => a.price - b.price)
+  }
+  if (filters.sortBy === "price-high") {
+    filtered.sort((a, b) => b.price - a.price)
+  }
+
+  setProducts(filtered)
+  setLoading(false)
+}, [categoryId, searchTerm, filters])
 
   const getCategoryTitle = () => {
     if (searchTerm) return `Resultados para "${searchTerm}"`
-    if (categoryId === '1') return 'Ropa Deportiva para Hombre'
-    if (categoryId === '2') return 'Ropa Deportiva para Mujer'
-    return 'Todos los Productos'
+  if (categoryId === 'deportiva') return 'Ropa Deportiva'
+if (categoryId === 'elegante') return 'Ropa Elegante'
+  return 'Todos los Productos'
   }
 
   const handleFilterChange = (filterType, value) => {
